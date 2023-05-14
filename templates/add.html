@@ -7,42 +7,37 @@
 </head>
 
 <body>
-    <form action="/update_movie/{{ movie.id }}" method="POST">
+    <form action="/add_movie" method="POST">
         <div class="table-container-remove">
             <table class="one-movie" style="border: 1px solid">
                 <tr>
                     <th colspan="2">Update movie:</th>
                 </tr>
-
-                <tr>
-                    <td class="field-name">Id: </td>
-                    <td>{{ movie.id }} </td>
-                </tr>
                 <tr>
                     <td class="field-name">Title: </td>
-                    <td><input type="text" name="title" value="{{ movie.title }}"></td>
+                    <td><input type="text" name="title"></td>
                 </tr>
                 <tr>
                     <td class="field-name">Actors: </td>
-                    <td><input type="text" name="actors" value="{{ movie.actors }}"></td>
+                    <td><input type="text" name="actors" ></td>
                 </tr>
                 <tr>
                     <td class="field-name">Director: </td>
-                    <td><input type="text" name="director" value="{{ movie.director }}"></td>
+                    <td><input type="text" name="director" ></td>
                 </tr>
                 <tr>
                     <td class="field-name">Release date: </td>
-                    <td><input type="text" name="releaseDate" value="{{ movie.releaseDate }}"></td>
+                    <td><input type="text" name="releaseDate" ></td>
                 </tr>
                 <tr>
                     <td class="field-name">Plot: </td>
-                    <td><textarea class="plot-summary" type="text" name="plot" >{{ movie.plot }}</textarea></td>
+                    <td><textarea class="plot-summary" type="text" name="plot" ></textarea></td>
                 </tr>
 
                 <tr>
                     <td colspan="2" style="text-align: center;">
                         <button class="button-submit" type="button" onclick="window.location.href='/cancel'">Cancel</button>
-                        <button class="button-submit" type="submit">Update</button>
+                        <button class="button-submit" type="submit">Add</button>
                     </td>
                 </tr>
             </table>

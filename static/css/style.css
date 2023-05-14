@@ -32,11 +32,11 @@ tr:nth-child(even) {
   background-color: #dddddd;
 }
 
-.button-submit {
-  background-color: black;
+.button-create {
+  background-color: slateblue;
   color: aliceblue;
   border-radius: 8%;
-  width: 80px;
+  width: 150px;
 }
 
 .vertical-align-center {
@@ -47,17 +47,16 @@ tr:nth-child(even) {
 .table-container {
   display: flex;
   justify-content: center;
-  background-color: black;
-  min-height: 30vh;
-  max-height: 30vh;
+  min-height: 20vh;
+  max-height: 20vh;
 }
 .list {
-  min-height: 50vh;
-  max-height: 50vh;
+  min-height: 70vh;
+  max-height: 70vh;
   overflow: auto;
 }
 
-.description {
+.plot-summary {
   min-width: 80%;
   min-height: 40px;
 }
@@ -97,3 +96,5 @@ input {
   width: 100%;
   color: grey;
 }
+
+ 
