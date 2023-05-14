@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<style>
+
+</style>
+
+
+<!-- <style></style> -->
+
+<h3>Hi {{user}}, welcome to our Moviestore!</h3>
+<div class="list">
+<table>
+    <tr>
+        <th colspan="5" class="caption">Movies</th>
+    </tr>
+
+    <tr>
+        <th style="width: 15%;" >Title</th>
+        <th style="width: 15%;" >Genres</th>
+        <th style="width: 60%;" >Description</th>
+        <th style="width: 10%;" colspan="2"> Actions</th>
+    </tr>
+    {% for movie in data %}
+    <tr>
+        <td>{{ movie.title }} </td>
+        <td>{{ movie.genres }} </td>
+        <td>{{ movie.description }} </td>
+        <td><a href="/delete_movie/{{ movie.id }}">Delete</a></td>
+        <td><a href="/update_movie/{{ movie.id }}">Update</a></td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+<br />
+
+<form action="/add_movie" method="POST">
+    <div class="table-container" style="min-height: 25%; max-height: 25%;">
+        <table class="one-movie">
+            <tr>
+            <tr>
+                <th colspan="2">New Movie</th>
+            </tr>
+            <tr>
+                <td class="field-name" >Title: </td>
+                <td><input type="text" name="title"></td>
+            </tr>
+            <tr>
+                <td class="field-name">Genres: </td>
+                <td><input type="text" name="genres"></td>
+            </tr>
+            <tr>
+                <td class="field-name">Description: </td>
+                <td><textarea class="description" type="text" name="description"></textarea></td>
+            </tr>
+
+            <tr>
+                <td colspan="2" style="text-align: center;">
+                    <button class="button-submit" type="submit">Add</button>
+                </td>
+            </tr>
+            </tr>
+        </table>
+    </div>
+</form>
+<footer class="footer">
+    <span >By Silvia Shimabuko - 2022199</span>
+</footer>
+</body>
+
+</html>

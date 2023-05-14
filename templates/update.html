@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+
+<body>
+    <form action="/update_movie/{{ movie.id }}" method="POST">
+        <div class="table-container-remove">
+            <table class="one-movie" style="border: 1px solid">
+                <tr>
+                    <th colspan="2">Update movie:</th>
+                </tr>
+
+                <tr>
+                    <td class="field-name">Id: </td>
+                    <td>{{ movie.id }} </td>
+                </tr>
+                <tr>
+                    <td class="field-name">Title: </td>
+                    <td><input type="text" name="title" value="{{ movie.title }}"></td>
+                </tr>
+                <tr>
+                    <td class="field-name">Genres: </td>
+                    <td><input type="text" name="genres" value="{{ movie.genres }}"></td>
+                </tr>
+                <tr>
+                    <td class="field-name">Description: </td>
+                    <td><textarea class="description" type="text" name="description" >{{ movie.description }}</textarea></td>
+                </tr>
+
+                <tr>
+                    <td colspan="2" style="text-align: center;">
+                        <button class="button-submit" type="button" onclick="window.location.href='/cancel'">Cancel</button>
+                        <button class="button-submit" type="submit">Update</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </form>
+    <footer class="footer">
+        <span >By Silvia Shimabuko - 2022199</span>
+    </footer>
+</body>
+
+</html>
