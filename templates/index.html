@@ -5,51 +5,50 @@
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
-<style>
 
-</style>
+<body>
+    <div class="header">
+        <h3>Hi {{user}}, welcome to our Moviestore!</h3>
+    </div>
 
+    <div class="list">
+        <table>
+            <tr>
+                <th colspan="8" class="caption">Movies</th>
+            </tr>
 
-<!-- <style></style> -->
-
-<h3>Hi {{user}}, welcome to our Moviestore!</h3>
-<div class="list">
-<table>
-    <tr>
-        <th colspan="8" class="caption">Movies</th>
-    </tr>
-
-    <tr>
-        <th style="width: 10%;" >Title</th>
-        <th style="width: 10%;" >Actors</th>
-        <th style="width: 10%;" >Director</th>
-        <th style="width: 5%;" >Release date</th>
-        <th style="width: 55%;" >Plot</th>
-        <th style="width: 10%;" colspan="2"> Actions</th>
-    </tr>
-    {% for movie in data %}
-    <tr>
-        <td>{{ movie.title }} </td>
-        <td>{{ movie.actors }} </td>
-        <td>{{ movie.director }} </td>
-        <td>{{ movie.releaseDate }} </td>
-        <td>{{ movie.plot }} </td>
-        <td><a href="/delete_movie/{{ movie.id }}">Delete</a></td>
-        <td><a href="/update_movie/{{ movie.id }}">Update</a></td>
-    </tr>
-    {% endfor %}
-</table>
-</div>
-<br />
+            <tr>
+                <th class="header-table" style="width: 10%;">Title</th>
+                <th class="header-table" style="width: 10%;">Actors</th>
+                <th class="header-table" style="width: 10%;">Director</th>
+                <th class="header-table" style="width: 5%;">Release date</th>
+                <th class="header-table" style="width: 55%;">Plot</th>
+                <th class="header-table" style="width: 10%;" colspan="2"> Actions</th>
+            </tr>
+            {% for movie in data %}
+            <tr>
+                <td>{{ movie.title }} </td>
+                <td>{{ movie.actors }} </td>
+                <td>{{ movie.director }} </td>
+                <td>{{ movie.releaseDate }} </td>
+                <td>{{ movie.plot }} </td>
+                <td class="actions-td"><a href="/delete_movie/{{ movie.id }}">Delete</a></td>
+                <td class="actions-td"><a href="/update_movie/{{ movie.id }}">Update</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <br />
 
 
     <div class="table-container" style="min-height: 15%; max-height: 15%;">
-        <button class="button-create" type="button" onclick="window.location.href='/add_movie'">Create new movie</button>
+        <button class="button-create" type="button" onclick="window.location.href='/add_movie'">Create new
+            movie</button>
     </div>
 
-<footer class="footer">
-    <span >By Silvia Shimabuko - 2022199</span>
-</footer>
+    <footer class="footer">
+        <span>By Silvia Shimabuko - 2022199</span>
+    </footer>
 </body>
 
 </html>
