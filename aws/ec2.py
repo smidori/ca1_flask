@@ -15,6 +15,8 @@ subnetId = 'subnet-0c9be6358a7c49808'
 sec_grp = 'sg-036cfa85ed283ecc7'
 private_key_path = f'./{keyName}.pem'
 directory_path = '/home/ubuntu/ca'
+hosted_zone_id = 'Z0377007Q8BSIW3W8YMM'
+subdomain = "ca-silvia.cctstudents.com"
 
 # Set up EC2 client
 ec2_client = boto3.client('ec2', region_name=region)
@@ -65,6 +67,30 @@ while True:
 response = ec2_client.describe_instances(InstanceIds=[instance_id])
 ip_server = response['Reservations'][0]['Instances'][0]['PublicIpAddress']
 
+
+
+#CREATING ROUTE53
+print('Creating route53...')
+response = boto3.client('route53').change_resource_record_sets(
+    HostedZoneId=hosted_zone_id,
+    ChangeBatch={
+        'Changes': [
+            {
+                'Action': 'CREATE',
+                'ResourceRecordSet': {
+                    'Name': subdomain,
+                    'Type': 'A',
+                    'TTL': 300,
+                    'ResourceRecords': [
+                        {
+                            'Value': ip_server
+                        },
+                    ],
+                }
+            },
+        ]
+    }
+)
 
 print(f"Starting to configure the EC2...")
 
@@ -136,6 +162,26 @@ for local_folder, remote_destination in folder_mapping.items():
 sftp.close()
 
 print(f"Executing few commands in ec2 server")
+# Nginx configuration
+nginx_config = f"""
+server {{
+    listen 80;
+    server_name {subdomain};
+
+    location / {{
+        proxy_pass http://localhost:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }}
+}}
+"""
+
+    
+# create a tmp file to save tge nginx configuration
+remote_filename = '/tmp/nginx_config.conf'
+with ssh.open_sftp().file(remote_filename, 'w') as remote_file:
+    remote_file.write(nginx_config)
+
 
 # Command list
 #execute flask in background and create log
@@ -144,7 +190,13 @@ commands = [
     'sudo apt install python3-pip -y',
     'sudo pip3 install flask',
     'flask --version',
-    f"nohup bash -c 'cd {directory_path} && python3 -m flask run --host=0.0.0.0 > flask.log 2>&1 &'"
+    'sudo apt-get install nginx -y', #used to redirect request from port 80 to 5000
+    f"nohup bash -c 'cd {directory_path} && python3 -m flask run --host=0.0.0.0 > flask.log 2>&1 &'",
+    'sudo apt-get install nginx -y',
+    'sudo cp {} /etc/nginx/sites-available/site.conf'.format(remote_filename),
+    'sudo ln -s /etc/nginx/sites-available/site.conf /etc/nginx/sites-enabled/',
+    'sudo nginx -t',
+    'sudo systemctl restart nginx',
 ]
 
 
@@ -164,7 +216,7 @@ for command in commands:
 
 print('The application is available on:')
 
-print(f"http://{ip_server}:5000")
+print(f"http://{ip_server}:5000 or http://{subdomain}")
 
 
 # Close the SSH connection
