@@ -70,13 +70,13 @@ ip_server = response['Reservations'][0]['Instances'][0]['PublicIpAddress']
 
 
 #CREATING ROUTE53
-print('Creating route53...')
+print(f'Creating or updating the route53: {subdomain}')
 response = boto3.client('route53').change_resource_record_sets(
     HostedZoneId=hosted_zone_id,
     ChangeBatch={
         'Changes': [
             {
-                'Action': 'CREATE',
+                'Action': 'UPSERT',
                 'ResourceRecordSet': {
                     'Name': subdomain,
                     'Type': 'A',
