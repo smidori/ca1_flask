@@ -12,7 +12,7 @@ imageId = 'ami-0ec7f9846da6b0f61'
 tagName = {"Key": "Name", "Value": "CA-Silvia"}
 keyName = 'cctkey1'
 subnetId = 'subnet-0c9be6358a7c49808'
-
+sec_grp = 'sg-036cfa85ed283ecc7'
 private_key_path = f'./{keyName}.pem'
 directory_path = '/home/ubuntu/ca'
 
@@ -26,22 +26,22 @@ instance_params = {
     'KeyName': keyName,
     'MinCount': 1,
     'MaxCount': 1,
-    'SecurityGroupIds': ['sg-036cfa85ed283ecc7'],
+    'SecurityGroupIds': [sec_grp],
     'SubnetId': subnetId,
-    # 'UserData': '''
-    #     #!/bin/bash
-    #     echo "Running a Linux commands -> updating, installing flask and setup environment"
-    #     sudo apt update && 
-    #     sudo apt install python3-pip -y && 
-    #     sudo pip3 install flask && 
-    #     flask --version 
-    # ''',
     'TagSpecifications': [
         {
             'ResourceType': 'instance',
             'Tags': [tagName]
         },
-    ]
+    ],
+    'BlockDeviceMappings': [
+        {
+            'DeviceName': '/dev/sda1',
+            'Ebs': {
+                'DeleteOnTermination': True,
+            }
+        },
+    ],
 }
 
 
@@ -116,8 +116,6 @@ for local_folder, remote_destination in folder_mapping.items():
     local_folder_path = os.path.abspath(local_folder)
     #replace is used to fix the separator from windows '\' to linux '/'
     remote_destination_path = os.path.join(directory_path, remote_destination).replace('\\', '/') 
-    
-    print(f"REMOTE DESTINATION PATH: {remote_destination_path}")
 
 
     for root, dirs, files in os.walk(local_folder_path):
