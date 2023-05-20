@@ -6,21 +6,17 @@ import paramiko
 import os
 
 
-#variables
-ca_name = 'ca-silvia' 
+#variables 
 region = 'eu-central-1'
 imageId = 'ami-0ec7f9846da6b0f61'
-tagName = {"Key": "Name", "Value": ca_name}
+tagName = {"Key": "Name", "Value": "CA-Silvia"}
 keyName = 'cctkey1'
 subnetId = 'subnet-0c9be6358a7c49808'
 sec_grp = 'sg-036cfa85ed283ecc7'
 private_key_path = f'./{keyName}.pem'
 directory_path = '/home/ubuntu/ca'
 hosted_zone_id = 'Z0377007Q8BSIW3W8YMM'
-subdomain = ca_name + ".cctstudents.com"
-file_name_bucket = 'ca_files.zip'
-s3_url = 'https://s3.eu-west-1.amazonaws.com/15.cctstudents.com/'+file_name_bucket
-nginx_filename = '/tmp/nginx_config.conf'
+subdomain = "ca-silvia.cctstudents.com"
 
 # Set up EC2 client
 ec2_client = boto3.client('ec2', region_name=region)
@@ -72,6 +68,7 @@ response = ec2_client.describe_instances(InstanceIds=[instance_id])
 ip_server = response['Reservations'][0]['Instances'][0]['PublicIpAddress']
 
 
+
 #CREATING ROUTE53
 print(f'Creating or updating the route53: {subdomain}')
 response = boto3.client('route53').change_resource_record_sets(
@@ -101,8 +98,10 @@ print(f"Starting to configure the EC2...")
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
+
 # Load the private key
 private_key = paramiko.RSAKey.from_private_key_file(private_key_path)
+
 
 #try to connect through the SSH
 retry_count = 5 #max attempts
@@ -110,7 +109,6 @@ retry_delay = 10 #time between every attempt
 
 for _ in range(retry_count):
     try:
-        # Connect to the instance using the key
         ssh.connect(ip_server, username='ubuntu', pkey=private_key)
         print("SSH connection successful")
         break
@@ -119,52 +117,88 @@ for _ in range(retry_count):
         print("Retrying...")
         time.sleep(retry_delay)
 
-#print('Uploading files to the instance ...')
+# Connect to the instance using the key
+#ssh.connect(ip_server, username='ubuntu', pkey=private_key)
 
+print('Uploading files to the instance ...')
 # Set up SFTP client
-#sftp = ssh.open_sftp()
+sftp = ssh.open_sftp()
+
+#create directory in the instance
+stdin, stdout, stderr = ssh.exec_command(f'mkdir -p {directory_path}')
+
+#copy the fileapp.py
+sftp.put('../app.py', os.path.join(directory_path, 'app.py').replace('\\', '/'))
+
+# List of folders that needs to be copied and place to where
+folder_mapping = {
+    '../static': 'static',
+     '../templates': 'templates',
+}
+
+# Upload files or folders to the remote server
+
+for local_folder, remote_destination in folder_mapping.items():
+    local_folder_path = os.path.abspath(local_folder)
+    #replace is used to fix the separator from windows '\' to linux '/'
+    remote_destination_path = os.path.join(directory_path, remote_destination).replace('\\', '/') 
+
+
+    for root, dirs, files in os.walk(local_folder_path):
+        # Create the corresponding remote directory structure
+        remote_dir = os.path.join(remote_destination_path, root.replace(local_folder_path, '').lstrip(os.sep))
+        #replace is used to fix the separator from windows '\' to linux '/'
+        remote_dir = remote_dir.replace('\\', '/')
+
+        sftp.mkdir(remote_dir)
+
+        for file in files:
+            local_file_path = os.path.join(root, file)
+            #replace is used to fix the separator from windows '\' to linux '/'
+            remote_file_path = os.path.join(remote_dir, file).replace('\\', '/')
+            sftp.put(local_file_path, remote_file_path)
+
+# Close the SFTP client
+sftp.close()
 
 print(f"Executing few commands in ec2 server")
 # Nginx configuration
-# nginx_config = f"""
-# server {{
-#     listen 80;
-#     server_name {subdomain};
+nginx_config = f"""
+server {{
+    listen 80;
+    server_name {subdomain};
 
-#     location / {{
-#         proxy_pass http://localhost:5000;
-#         proxy_set_header Host $host;
-#         proxy_set_header X-Real-IP $remote_addr;
-#     }}
-# }}
-# """    
-# # create a tmp file to save tge nginx configuration
-# with sftp().file(nginx_filename, 'w') as nginx_file:
-#     nginx_file.write(nginx_config)
+    location / {{
+        proxy_pass http://localhost:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }}
+}}
+"""
+
+    
+# create a tmp file to save tge nginx configuration
+remote_filename = '/tmp/nginx_config.conf'
+with ssh.open_sftp().file(remote_filename, 'w') as remote_file:
+    remote_file.write(nginx_config)
+
 
 # Command list
+#execute flask in background and create log
 commands = [
-    'mkdir -p {}'.format(directory_path),
-    'sudo apt-get update',
-    'sudo apt update && sudo apt-get install -y wget unzip nginx gunicorn',
-    'cd {} && sudo wget {}'.format(directory_path, s3_url),    
-    'cd {} && sudo unzip {} '.format(directory_path, file_name_bucket),
-    "sudo sed -i 's/domain/{}/g' {}/site.conf".format(subdomain, directory_path),
+    'sudo apt update',
     'sudo apt install python3-pip -y',
     'sudo pip3 install flask',
     'flask --version',
-    'sudo mv {}/gunicorn.service /etc/systemd/system/'.format(directory_path),
-    'sudo systemctl enable gunicorn',
-    'sudo systemctl daemon-reload',
-    'sudo systemctl start gunicorn',
-    'sudo mv {}/site.conf /etc/nginx/sites-available/site.conf'.format(directory_path),
+    'sudo apt-get install nginx -y', #used to redirect request from port 80 to 5000
+    f"nohup bash -c 'cd {directory_path} && python3 -m flask run --host=0.0.0.0 > flask.log 2>&1 &'",
+    'sudo apt-get install nginx -y',
+    'sudo cp {} /etc/nginx/sites-available/site.conf'.format(remote_filename),
     'sudo ln -s /etc/nginx/sites-available/site.conf /etc/nginx/sites-enabled/',
     'sudo nginx -t',
     'sudo systemctl restart nginx',
 ]
 
-#in case there is any error while executing the commands, this variable will be false
-success = True
 
 # Execute commands sequentially
 for command in commands:
@@ -175,19 +209,15 @@ for command in commands:
     if exit_status == 0:
         print(f"Command '{command}' executed successfully")
     else:
-        success = False
         error = stderr.read().decode().strip()
         print(f"Command '{command}' failed with error:\n{error}")
         break
 
-if success: 
-    print('The application is available on:')
-    print(f"http://{ip_server}:5000 or http://{subdomain}")
-else:
-    print('Something went wrong :(')
 
-# Close the SFTP client
-#sftp.close()
+print('The application is available on:')
+
+print(f"http://{ip_server}:5000 or http://{subdomain}")
+
 
 # Close the SSH connection
 ssh.close()

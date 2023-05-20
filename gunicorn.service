@@ -1,0 +1,12 @@
+[Unit]
+Description=Gunicorn service
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/ca
+ExecStart=/usr/bin/gunicorn -w 1 -b 0.0.0.0:5000 app:app
+
+[Install]
+WantedBy=multi-user.target
